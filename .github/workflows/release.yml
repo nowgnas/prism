@@ -1,0 +1,107 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app
+
+      - name: Install xcodegen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Set version from tag
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION" \
+            Sources/Prism/Resources/Info.plist
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $VERSION" \
+            Sources/Prism/Resources/Info.plist
+
+      - name: Build (Release)
+        run: |
+          xcodebuild \
+            -project Prism.xcodeproj \
+            -scheme Prism \
+            -configuration Release \
+            -archivePath "$PWD/build/Prism.xcarchive" \
+            archive \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            MARKETING_VERSION=${{ env.VERSION }} \
+            CURRENT_PROJECT_VERSION=${{ env.VERSION }}
+
+      - name: Package .app into zip
+        run: |
+          APP_PATH="build/Prism.xcarchive/Products/Applications/Prism.app"
+          ditto -c -k --keepParent "$APP_PATH" "build/Prism.zip"
+          SHA=$(shasum -a 256 build/Prism.zip | awk '{print $1}')
+          echo "SHA256=$SHA" >> $GITHUB_ENV
+          echo "Prism.zip SHA256: $SHA"
+
+      - name: Upload to GitHub Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/Prism.zip
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update Homebrew Cask
+        env:
+          HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ env.VERSION }}"
+          SHA256="${{ env.SHA256 }}"
+          URL="https://github.com/${{ github.repository }}/releases/download/v${VERSION}/Prism.zip"
+
+          git clone https://x-access-token:${HOMEBREW_TAP_GITHUB_TOKEN}@github.com/nowgnas/homebrew-tap.git tap-repo
+          cd tap-repo
+
+          mkdir -p Casks
+          cat > Casks/prism.rb <<EOF
+          cask "prism" do
+            version "${VERSION}"
+            sha256 "${SHA256}"
+
+            url "${URL}"
+            name "Prism"
+            desc "A neon-styled terminal multiplexer with color-coded tabs"
+            homepage "https://github.com/nowgnas/prism-app"
+
+            app "Prism.app"
+
+            zap trash: [
+              "~/.config/prism",
+              "~/Library/Application Support/com.nowgnas.prism",
+              "~/Library/Preferences/com.nowgnas.prism.plist",
+            ]
+
+            caveats <<~CAVEATS
+              If macOS blocks the app on first launch:
+                sudo xattr -cr /Applications/Prism.app
+              Or allow it in System Settings > Privacy & Security.
+            CAVEATS
+          end
+          EOF
+
+          git config user.email "actions@github.com"
+          git config user.name "GitHub Actions"
+          git add Casks/prism.rb
+          git commit -m "Update prism to v${VERSION}"
+          git push

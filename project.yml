@@ -1,0 +1,37 @@
+name: Prism
+options:
+  bundleIdPrefix: com.nowgnas
+  deploymentTarget:
+    macOS: "13.0"
+  createIntermediateGroups: true
+
+packages:
+  SwiftTerm:
+    url: https://github.com/migueldeicaza/SwiftTerm
+    from: "1.2.3"
+
+targets:
+  Prism:
+    type: application
+    platform: macOS
+    deploymentTarget: "13.0"
+    sources:
+      - Sources/Prism
+    resources:
+      - Sources/Prism/Resources
+    dependencies:
+      - package: SwiftTerm
+    settings:
+      base:
+        SWIFT_VERSION: "5.9"
+        MACOSX_DEPLOYMENT_TARGET: "13.0"
+        PRODUCT_BUNDLE_IDENTIFIER: com.nowgnas.prism
+        PRODUCT_NAME: Prism
+        INFOPLIST_FILE: Sources/Prism/Resources/Info.plist
+        CODE_SIGN_STYLE: Manual
+        CODE_SIGNING_REQUIRED: "NO"
+        CODE_SIGNING_ALLOWED: "NO"
+        ENABLE_HARDENED_RUNTIME: "NO"
+      configs:
+        Release:
+          SWIFT_OPTIMIZATION_LEVEL: "-O"
