@@ -53,6 +53,7 @@ brews:
     repository:
       owner: nowgnas
       name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
     homepage: https://github.com/nowgnas/prism
     description: "A colorful TUI terminal multiplexer with tab-per-project panes"
     license: MIT
@@ -60,3 +61,4 @@ brews:
       system "#{bin}/prism --version"
     install: |
       bin.install "prism"
+
