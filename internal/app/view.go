@@ -66,7 +66,7 @@ func renderTabPanes(t *tab.Model, w, h int, spinnerStr string) string {
 
 	// If zoomed, render only the zoomed pane full-size
 	if t.ZoomedPane >= 0 && t.ZoomedPane < n {
-		return renderPane(t.Terminals[t.ZoomedPane], layout.Rect{0, 0, w, h}, t.Color, spinnerStr)
+		return renderPane(t.Terminals[t.ZoomedPane], layout.Rect{X: 0, Y: 0, W: w, H: h}, t.Color, spinnerStr)
 	}
 
 	rects := layout.ComputeLayout(n, w, h)
