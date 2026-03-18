@@ -79,7 +79,7 @@ final class Coordinator: NSObject, LocalProcessTerminalViewDelegate {
 final class NeonPane: NSView {
     private var terminalView: LocalProcessTerminalView?
 
-    override var isFlipped: Bool { true }
+    // isFlipped을 override하지 않음 — SwiftTerm은 macOS 기본 좌표계(bottom-left) 사용
     override var acceptsFirstResponder: Bool { true }
 
     func install(terminalView tv: LocalProcessTerminalView, color: NSColor?, isActive: Bool) {
@@ -91,7 +91,11 @@ final class NeonPane: NSView {
     }
 
     func update(color: NSColor?, isActive: Bool) {
+        // CATransaction으로 애니메이션 없이 즉시 반영
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
         applyStyle(color: color, isActive: isActive)
+        CATransaction.commit()
     }
 
     private func applyStyle(color: NSColor?, isActive: Bool) {
@@ -99,9 +103,9 @@ final class NeonPane: NSView {
             ? (color ?? NeonTheme.inactiveBorder)
             : NeonTheme.inactiveBorder
 
-        layer?.borderColor  = borderColor.cgColor
-        layer?.borderWidth  = NeonTheme.borderWidth
-        layer?.cornerRadius = NeonTheme.cornerRadius
+        layer?.borderColor     = borderColor.cgColor
+        layer?.borderWidth     = NeonTheme.borderWidth
+        layer?.cornerRadius    = NeonTheme.cornerRadius
         layer?.backgroundColor = NeonTheme.termBG.cgColor
 
         if isActive {
@@ -120,7 +124,6 @@ final class NeonPane: NSView {
         terminalView?.frame = bounds.insetBy(dx: inset, dy: inset)
     }
 
-    // Forward key events to the embedded terminal view
     override func keyDown(with event: NSEvent) {
         terminalView?.keyDown(with: event)
     }

@@ -17,7 +17,9 @@ struct TabGridView: View {
                         )
                         .frame(width: rect.width, height: rect.height)
                         .offset(x: rect.minX, y: rect.minY)
-                        .onTapGesture { tab.activeSessionIndex = idx }
+                        .onTapGesture {
+                            tab.activeSessionIndex = idx
+                        }
                     }
                 }
             }
