@@ -5,7 +5,6 @@ import (
 
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/bubbles/textinput"
 
 	"github.com/nowgnas/prism/internal/messages"
 )
