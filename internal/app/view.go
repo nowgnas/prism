@@ -1,7 +1,6 @@
 package app
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
@@ -114,19 +113,12 @@ func renderPane(term *terminal.Model, rect layout.Rect, tabColor lipgloss.Color,
 		borderColor = "#444444"
 	}
 
-	// Status indicator in top-right of border
-	statusStr := termStatusStr(term, tabColor, spinnerStr)
-
-	// Build border title
-	title := fmt.Sprintf(" %d%s ", term.ID, statusStr)
-
 	paneStyle := lipgloss.NewStyle().
 		Width(inner.W).
 		Height(inner.H).
 		Border(lipgloss.RoundedBorder()).
 		BorderForeground(borderColor)
 
-	_ = title // lipgloss border title support varies; use simple border for now
 	return paneStyle.Render(content)
 }
 

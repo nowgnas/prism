@@ -1,3 +1,5 @@
+//go:build !windows
+
 package terminal
 
 import (
@@ -11,7 +13,6 @@ import (
 )
 
 // Start launches a shell in a new PTY with the given dimensions.
-// Returns the PTY file and the started Cmd.
 func Start(shell string, cols, rows int, env []string) (*os.File, *exec.Cmd, error) {
 	if shell == "" {
 		shell = detectShell()
@@ -43,11 +44,9 @@ func Resize(ptmx *os.File, cols, rows int) error {
 }
 
 func detectShell() string {
-	// Try $SHELL env var first
 	if s := os.Getenv("SHELL"); s != "" {
 		return s
 	}
-	// Fallback order
 	for _, sh := range []string{"/bin/zsh", "/bin/bash", "/bin/sh"} {
 		if _, err := os.Stat(sh); err == nil {
 			return sh
@@ -58,7 +57,6 @@ func detectShell() string {
 
 func buildEnv(extra []string, cols, rows int) []string {
 	env := os.Environ()
-	// Override TERM, COLUMNS, LINES
 	filtered := make([]string, 0, len(env)+10)
 	for _, e := range env {
 		if strings.HasPrefix(e, "TERM=") ||
