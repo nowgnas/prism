@@ -6,7 +6,7 @@ import AppKit
 
 struct TerminalPaneView: NSViewRepresentable {
     @ObservedObject var session: SessionModel
-    let tabColor: Color
+    let tabColor: SwiftUI.Color
     let isActive: Bool
 
     func makeNSView(context: Context) -> NeonPane {
