@@ -29,6 +29,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.nowgnas.prism
         PRODUCT_NAME: Prism
         INFOPLIST_FILE: Sources/Prism/Resources/Info.plist
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         CODE_SIGN_STYLE: Manual
         CODE_SIGNING_REQUIRED: "NO"
         CODE_SIGNING_ALLOWED: "NO"
