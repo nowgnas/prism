@@ -28,5 +28,6 @@ jobs:
             -scheme Prism \
             -configuration Debug \
             build \
+            ARCHS="x86_64 arm64" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO

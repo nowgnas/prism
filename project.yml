@@ -25,6 +25,7 @@ targets:
       base:
         SWIFT_VERSION: "5.9"
         MACOSX_DEPLOYMENT_TARGET: "13.0"
+        ARCHS: "x86_64 arm64"
         PRODUCT_BUNDLE_IDENTIFIER: com.nowgnas.prism
         PRODUCT_NAME: Prism
         INFOPLIST_FILE: Sources/Prism/Resources/Info.plist
