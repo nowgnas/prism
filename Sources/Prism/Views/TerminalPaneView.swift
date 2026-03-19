@@ -58,9 +58,10 @@ struct TerminalPaneView: NSViewRepresentable {
         tv.processDelegate = coordinator
         coordinator.terminalView = tv
 
-        // Start shell
+        // Start shell in user's home directory
         let shell = ProcessInfo.processInfo.environment["SHELL"] ?? "/bin/zsh"
-        tv.startProcess(executable: shell, args: [], environment: nil, execName: nil)
+        let homeDir = FileManager.default.homeDirectoryForCurrentUser.path
+        tv.startProcess(executable: shell, args: [], environment: nil, execName: nil, currentDirectory: homeDir)
 
         let pane = NeonPane()
         pane.install(terminalView: tv, color: NSColor(tabColor), isActive: isActive)
