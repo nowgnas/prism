@@ -70,7 +70,7 @@ final class AppState: ObservableObject {
                 if event.characters == "[" { Task { @MainActor in self.prevTab() }; return nil }
             }
 
-            // ⌘⌥→ → next pane, ⌘⌥← → prev pane within active tab
+            // ⌘⌥→ → next pane, ⌘⌥← → prev pane, ⌘⌥W → close pane within active tab
             if mods == [.command, .option] {
                 if event.specialKey == .rightArrow {
                     Task { @MainActor in self.activeTab?.nextPane() }
@@ -78,6 +78,10 @@ final class AppState: ObservableObject {
                 }
                 if event.specialKey == .leftArrow {
                     Task { @MainActor in self.activeTab?.prevPane() }
+                    return nil
+                }
+                if event.charactersIgnoringModifiers?.lowercased() == "w" {
+                    Task { @MainActor in self.activeTab?.closeActivePane() }
                     return nil
                 }
             }

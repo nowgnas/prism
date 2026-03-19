@@ -58,6 +58,10 @@ final class TabModel: ObservableObject, Identifiable {
         activeSessionIndex = (activeSessionIndex - 1 + sessions.count) % sessions.count
     }
 
+    func closeActivePane() {
+        removeSession(at: activeSessionIndex)
+    }
+
     // MARK: - Cleanup
 
     func cleanup() {
