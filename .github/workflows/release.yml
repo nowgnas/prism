@@ -39,8 +39,10 @@ jobs:
             -project Prism.xcodeproj \
             -scheme Prism \
             -configuration Release \
+            -destination "generic/platform=macOS" \
             -archivePath "$PWD/build/Prism.xcarchive" \
             archive \
+            ONLY_ACTIVE_ARCH=NO \
             ARCHS="x86_64 arm64" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
