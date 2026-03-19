@@ -92,15 +92,23 @@ Alternatively:
 
 ## Build from Source
 
+Requires **full Xcode** from the App Store (not only Command Line Tools). If the shell points at CLT:
+
 ```bash
-# Install dependencies
+sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+```
+
+```bash
 brew install xcodegen
-
-# Generate Xcode project
+./scripts/check-xcode-env.sh    # optional: confirm xcodebuild is Xcode
 xcodegen generate
+open Prism.xcodeproj            # ⌘R to run
+```
 
-# Open in Xcode
-open Prism.xcodeproj
+Or build from the terminal:
+
+```bash
+./scripts/build-debug.sh
 ```
 
 ---
