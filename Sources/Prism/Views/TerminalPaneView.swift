@@ -63,6 +63,9 @@ struct TerminalPaneView: NSViewRepresentable {
         let homeDir = FileManager.default.homeDirectoryForCurrentUser.path
         tv.startProcess(executable: shell, args: [], environment: nil, execName: nil, currentDirectory: homeDir)
 
+        // Play animated startup banner
+        playStartupAnimation(on: tv)
+
         let pane = NeonPane()
         pane.install(terminalView: tv, color: NSColor(tabColor), isActive: isActive)
 
@@ -70,6 +73,21 @@ struct TerminalPaneView: NSViewRepresentable {
         session.startPolling()
 
         return pane
+    }
+
+    /// Plays the animated startup banner with timing
+    private func playStartupAnimation(on tv: LocalProcessTerminalView) {
+        let frames = StartupBanner.animationFrames
+        var cumulativeDelay: Int = 0
+
+        for frame in frames {
+            cumulativeDelay += frame.delay
+            let text = frame.text
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(cumulativeDelay)) {
+                tv.feed(text: text)
+            }
+        }
     }
 }
 
