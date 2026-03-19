@@ -27,6 +27,8 @@ final class TabModel: ObservableObject, Identifiable {
         let session = SessionModel()
         sessions.append(session)
         observe(session)
+        // Auto-focus the new pane
+        activeSessionIndex = sessions.count - 1
     }
 
     func removeSession(at index: Int) {
@@ -41,6 +43,20 @@ final class TabModel: ObservableObject, Identifiable {
         guard activeSessionIndex < sessions.count else { return nil }
         return sessions[activeSessionIndex]
     }
+
+    // MARK: - Pane focus navigation
+
+    func nextPane() {
+        guard !sessions.isEmpty else { return }
+        activeSessionIndex = (activeSessionIndex + 1) % sessions.count
+    }
+
+    func prevPane() {
+        guard !sessions.isEmpty else { return }
+        activeSessionIndex = (activeSessionIndex - 1 + sessions.count) % sessions.count
+    }
+
+    // MARK: - Cleanup
 
     func cleanup() {
         sessions.forEach { $0.stopPolling() }

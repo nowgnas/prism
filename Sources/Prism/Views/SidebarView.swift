@@ -100,8 +100,8 @@ struct SidebarView: View {
                 .fill(isActive ? tab.color.opacity(0.08) : Color.clear)
         )
         .contentShape(Rectangle())
-        .onTapGesture { appState.activeTabIndex = index }
         .onTapGesture(count: 2) { beginRename(tab: tab) }
+        .onTapGesture { appState.activeTabIndex = index }
         .contextMenu { tabContextMenu(tab: tab, index: index) }
     }
 

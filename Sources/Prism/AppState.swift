@@ -55,11 +55,33 @@ final class AppState: ObservableObject {
     private func installKeyMonitor() {
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
             guard let self else { return event }
-            // Shift+Tab (keyCode 48) → next tab
-            if event.keyCode == 48 && event.modifierFlags.contains(.shift) {
+
+            let mods = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+
+            // Shift+Tab → next tab (cycle forward)
+            if event.specialKey == .tab && mods == .shift {
                 Task { @MainActor in self.nextTab() }
                 return nil
             }
+
+            // ⌘⇧] → next tab, ⌘⇧[ → prev tab (standard macOS terminal convention)
+            if mods == [.command, .shift] {
+                if event.characters == "]" { Task { @MainActor in self.nextTab() }; return nil }
+                if event.characters == "[" { Task { @MainActor in self.prevTab() }; return nil }
+            }
+
+            // ⌘⌥→ → next pane, ⌘⌥← → prev pane within active tab
+            if mods == [.command, .option] {
+                if event.specialKey == .rightArrow {
+                    Task { @MainActor in self.activeTab?.nextPane() }
+                    return nil
+                }
+                if event.specialKey == .leftArrow {
+                    Task { @MainActor in self.activeTab?.prevPane() }
+                    return nil
+                }
+            }
+
             return event
         }
     }

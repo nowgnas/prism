@@ -1,5 +1,6 @@
 import SwiftUI
 import Combine
+import AppKit
 
 // MARK: - Status
 
@@ -35,19 +36,21 @@ enum TerminalStatus: Int, Comparable {
 // MARK: - SessionModel
 
 /// Represents a single PTY terminal session (one pane).
+/// Holds strong references to its AppKit views so they survive tab switches.
 final class SessionModel: ObservableObject, Identifiable {
     let id = UUID()
     @Published var status: TerminalStatus = .idle
     @Published var title: String = ""
 
-    /// Shell PID — set by TerminalPaneView after process starts.
-    var shellPID: pid_t = 0
+    /// Cached AppKit container — created once, never recreated on tab switch.
+    var neonPane: NeonPane?
+    /// Cached coordinator — reused across NSViewRepresentable lifecycles.
+    var terminalCoordinator: TerminalCoordinator?
 
     private var pollTimer: Timer?
 
     init() {}
 
-    /// Start periodic process polling (3-second interval to keep memory/CPU low).
     func startPolling() {
         stopPolling()
         pollTimer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: true) { [weak self] _ in
@@ -66,8 +69,8 @@ final class SessionModel: ObservableObject, Identifiable {
     }
 
     private func poll() {
-        guard shellPID > 0 else { return }
-        let children = AIDetector.childNames(of: shellPID)
+        guard let pid = neonPane?.shellPID, pid > 0 else { return }
+        let children = AIDetector.childNames(of: pid)
         DispatchQueue.main.async {
             if children.isEmpty {
                 self.status = .idle

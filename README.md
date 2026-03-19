@@ -79,7 +79,11 @@ Alternatively:
 | `⌘T` | New tab |
 | `⌘W` | Close tab |
 | `⌘D` | Add pane |
-| `⇧Tab` | Next tab |
+| `⇧Tab` | Next tab (cycle forward) |
+| `⌘⇧]` | Next tab |
+| `⌘⇧[` | Previous tab |
+| `⌘⌥→` | Focus next pane |
+| `⌘⌥←` | Focus previous pane |
 | Double-click tab name | Rename tab |
 | Right-click tab | Context menu (rename, add pane, close) |
 

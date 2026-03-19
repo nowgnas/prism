@@ -2,52 +2,79 @@ import SwiftUI
 import SwiftTerm
 import AppKit
 
-// MARK: - SwiftUI bridge
+// MARK: - NSViewRepresentable bridge
 
+/// Wraps a cached NeonPane inside a thin TerminalContainer.
+/// The NeonPane (and its LocalProcessTerminalView) is stored on SessionModel
+/// so it persists across tab switches — tabs never lose their terminal state.
 struct TerminalPaneView: NSViewRepresentable {
     @ObservedObject var session: SessionModel
     let tabColor: SwiftUI.Color
     let isActive: Bool
 
-    func makeNSView(context: Context) -> NeonPane {
-        let pane = NeonPane()
+    func makeCoordinator() -> TerminalCoordinator {
+        // Reuse existing coordinator if already created for this session
+        if let existing = session.terminalCoordinator {
+            return existing
+        }
+        let coordinator = TerminalCoordinator(session: session)
+        session.terminalCoordinator = coordinator
+        return coordinator
+    }
+
+    func makeNSView(context: Context) -> TerminalContainer {
+        let container = TerminalContainer()
+        let pane = demandPane(coordinator: context.coordinator)
+        container.attach(pane: pane)
+        return container
+    }
+
+    func updateNSView(_ container: TerminalContainer, context: Context) {
+        let pane = demandPane(coordinator: context.coordinator)
+        container.attach(pane: pane)
+        pane.update(color: NSColor(tabColor), isActive: isActive)
+    }
+
+    // MARK: - Pane lifecycle (created once, reused forever)
+
+    private func demandPane(coordinator: TerminalCoordinator) -> NeonPane {
+        if let existing = session.neonPane {
+            return existing
+        }
+
         let tv = LocalProcessTerminalView(frame: .zero)
 
         // Appearance
         tv.nativeForegroundColor = NeonTheme.termFG
         tv.nativeBackgroundColor = NeonTheme.termBG
-        tv.font = NSFont.monospacedSystemFont(ofSize: 13, weight: .regular)
+        tv.font = NSFont(name: "MesloLGS NF", size: 13)
+            ?? NSFont(name: "JetBrains Mono", size: 13)
+            ?? NSFont.monospacedSystemFont(ofSize: 13, weight: .regular)
+
+        // Ghostty-like behaviour
+        tv.optionAsMetaKey = true
 
         // Delegate
-        tv.processDelegate = context.coordinator
+        tv.processDelegate = coordinator
+        coordinator.terminalView = tv
 
         // Start shell
         let shell = ProcessInfo.processInfo.environment["SHELL"] ?? "/bin/zsh"
-        tv.startProcess(executable: shell,
-                        args: [],
-                        environment: nil,
-                        execName: nil)
+        tv.startProcess(executable: shell, args: [], environment: nil, execName: nil)
 
-        // Store reference for input forwarding
-        context.coordinator.terminalView = tv
+        let pane = NeonPane()
+        pane.install(terminalView: tv, color: NSColor(tabColor), isActive: isActive)
+
+        session.neonPane = pane
         session.startPolling()
 
-        pane.install(terminalView: tv, color: NSColor(tabColor), isActive: isActive)
         return pane
-    }
-
-    func updateNSView(_ pane: NeonPane, context: Context) {
-        pane.update(color: NSColor(tabColor), isActive: isActive)
-    }
-
-    func makeCoordinator() -> Coordinator {
-        Coordinator(session: session)
     }
 }
 
-// MARK: - Coordinator
+// MARK: - TerminalCoordinator
 
-final class Coordinator: NSObject, LocalProcessTerminalViewDelegate {
+final class TerminalCoordinator: NSObject, LocalProcessTerminalViewDelegate {
     let session: SessionModel
     weak var terminalView: LocalProcessTerminalView?
 
@@ -55,7 +82,6 @@ final class Coordinator: NSObject, LocalProcessTerminalViewDelegate {
         self.session = session
     }
 
-    // Required
     func sizeChanged(source: LocalProcessTerminalView, newCols: Int, newRows: Int) {}
 
     func setTerminalTitle(source: LocalProcessTerminalView, title: String) {
@@ -66,20 +92,49 @@ final class Coordinator: NSObject, LocalProcessTerminalViewDelegate {
         session.markExited()
     }
 
-    // Optional (provide default implementations)
     func hostCurrentDirectoryUpdate(source: TerminalView, directory: String?) {}
     func requestOpenLink(source: TerminalView, link: String, params: [String: String]) {}
     func bell(source: TerminalView) {}
-    func scrolled(source: TerminalView, position: Double) {}
-    func rangeChanged(source: TerminalView, startY: Int, endY: Int) {}
 }
 
-// MARK: - NeonPane (NSView container with neon border + glow)
+// MARK: - TerminalContainer (thin wrapper — recreated by SwiftUI, not preserved)
+
+final class TerminalContainer: NSView {
+    private(set) var pane: NeonPane?
+
+    /// Re-parents the NeonPane into this container.
+    /// AppKit silently removes from old superview before adding here.
+    func attach(pane newPane: NeonPane) {
+        guard newPane !== pane else { return }
+        pane?.removeFromSuperview()
+        pane = newPane
+        addSubview(newPane)
+        needsLayout = true
+        // Restore focus to the terminal after re-parenting
+        if let window = window {
+            window.makeFirstResponder(newPane)
+        }
+    }
+
+    override func layout() {
+        super.layout()
+        pane?.frame = bounds
+    }
+
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        if window != nil, let pane = pane {
+            window?.makeFirstResponder(pane)
+        }
+    }
+}
+
+// MARK: - NeonPane (neon border + glow container, owned by SessionModel)
 
 final class NeonPane: NSView {
-    private var terminalView: LocalProcessTerminalView?
+    private(set) var terminalView: LocalProcessTerminalView?
+    var shellPID: pid_t { terminalView?.process.shellPid ?? 0 }
 
-    // isFlipped을 override하지 않음 — SwiftTerm은 macOS 기본 좌표계(bottom-left) 사용
     override var acceptsFirstResponder: Bool { true }
 
     func install(terminalView tv: LocalProcessTerminalView, color: NSColor?, isActive: Bool) {
@@ -91,7 +146,6 @@ final class NeonPane: NSView {
     }
 
     func update(color: NSColor?, isActive: Bool) {
-        // CATransaction으로 애니메이션 없이 즉시 반영
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         applyStyle(color: color, isActive: isActive)
