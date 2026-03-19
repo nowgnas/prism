@@ -12,7 +12,7 @@ struct TabGridView: View {
                         let rect = rects[idx]
                         TerminalPaneView(
                             session: session,
-                            tabColor: tab.color,
+                            tabColor: session.paneColor,
                             isActive: idx == tab.activeSessionIndex
                         )
                         .frame(width: rect.width, height: rect.height)

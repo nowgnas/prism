@@ -25,6 +25,8 @@ final class TabModel: ObservableObject, Identifiable {
     func addSession() {
         guard sessions.count < 6 else { return }
         let session = SessionModel()
+        let colorIndex = (paletteIndex + sessions.count) % NeonTheme.palette.count
+        session.paneColor = NeonTheme.color(for: colorIndex)
         sessions.append(session)
         observe(session)
         // Auto-focus the new pane

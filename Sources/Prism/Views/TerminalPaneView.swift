@@ -153,9 +153,10 @@ final class NeonPane: NSView {
     }
 
     private func applyStyle(color: NSColor?, isActive: Bool) {
+        let baseColor = color ?? NeonTheme.inactiveBorder
         let borderColor = isActive
-            ? (color ?? NeonTheme.inactiveBorder)
-            : NeonTheme.inactiveBorder
+            ? baseColor
+            : baseColor.withAlphaComponent(0.35)
 
         layer?.borderColor     = borderColor.cgColor
         layer?.borderWidth     = NeonTheme.borderWidth
@@ -163,7 +164,7 @@ final class NeonPane: NSView {
         layer?.backgroundColor = NeonTheme.termBG.cgColor
 
         if isActive {
-            layer?.shadowColor   = borderColor.cgColor
+            layer?.shadowColor   = baseColor.cgColor
             layer?.shadowRadius  = 8
             layer?.shadowOpacity = 0.7
             layer?.shadowOffset  = .zero

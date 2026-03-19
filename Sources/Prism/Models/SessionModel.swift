@@ -41,6 +41,7 @@ final class SessionModel: ObservableObject, Identifiable {
     let id = UUID()
     @Published var status: TerminalStatus = .idle
     @Published var title: String = ""
+    var paneColor: Color = NeonTheme.palette[0]
 
     /// Cached AppKit container — created once, never recreated on tab switch.
     var neonPane: NeonPane?
