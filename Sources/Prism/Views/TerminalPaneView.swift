@@ -63,8 +63,7 @@ struct TerminalPaneView: NSViewRepresentable {
         let homeDir = FileManager.default.homeDirectoryForCurrentUser.path
         tv.startProcess(executable: shell, args: [], environment: nil, execName: nil, currentDirectory: homeDir)
 
-        // Play animated startup banner
-        playStartupAnimation(on: tv)
+        showStartupBanner(on: tv)
 
         let pane = NeonPane()
         pane.install(terminalView: tv, color: NSColor(tabColor), isActive: isActive)
@@ -75,19 +74,10 @@ struct TerminalPaneView: NSViewRepresentable {
         return pane
     }
 
-    /// Plays the animated startup banner with timing
-    private func playStartupAnimation(on tv: LocalProcessTerminalView) {
-        let frames = StartupBanner.animationFrames
-        // Let the PTY/shell attach before we clear the screen (avoids racing zsh output)
-        var cumulativeDelay: Int = 280
-
-        for frame in frames {
-            cumulativeDelay += frame.delay
-            let text = frame.text
-
-            DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(cumulativeDelay)) {
-                tv.feed(text: text)
-            }
+    /// Static startup banner — one write after the shell attaches (avoids racing zsh output).
+    private func showStartupBanner(on tv: LocalProcessTerminalView) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(280)) {
+            tv.feed(text: StartupBanner.script)
         }
     }
 }
