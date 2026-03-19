@@ -70,30 +70,8 @@ enum StartupBanner {
         // Frame 22: Bottom divider
         frames.append((80, "\n\(dim)\(divider)\(reset)\n"))
 
-        // Frame 23: Color wave effect on prism (3 cycles)
-        for cycle in 0..<3 {
-            // Move cursor up to redraw prism
-            let moveUp = String(repeating: up, count: 11)
-            var waveFrame = moveUp + "\n\(dim)\(divider)\(reset)\n\n"
-
-            for (i, line) in prismLines.enumerated() {
-                let colorIdx = (i + cycle) % colors.count
-                waveFrame += "\(colors[colorIdx])\(bold)\(line)\(reset)\n"
-            }
-
-            // Re-add the rest
-            waveFrame += "\n"
-            var titlePart = "     "
-            for (i, char) in title.enumerated() {
-                let colorIdx = (i + cycle) % colors.count
-                titlePart += "\(colors[colorIdx])\(bold)\(char)\(reset)"
-            }
-            waveFrame += titlePart + "\n"
-            waveFrame += "\(dim)    Terminal Multiplexer\(reset)\n"
-            waveFrame += "\n\(dim)\(divider)\(reset)\n"
-
-            frames.append((150, waveFrame))
-        }
+        // Subtle glow pulse effect (no cursor movement - avoids timing issues)
+        frames.append((200, ""))
 
         // Final frame: Show cursor and add newlines
         frames.append((50, "\n\(show)"))
