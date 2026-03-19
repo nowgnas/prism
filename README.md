@@ -84,6 +84,7 @@ Alternatively:
 | `⌘⇧[` | Previous tab |
 | `⌘⌥→` | Focus next pane |
 | `⌘⌥←` | Focus previous pane |
+| `⌘⌥W` | Close active pane |
 | Double-click tab name | Rename tab |
 | Right-click tab | Context menu (rename, add pane, close) |
 

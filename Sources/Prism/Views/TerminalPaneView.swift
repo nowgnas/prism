@@ -78,8 +78,8 @@ struct TerminalPaneView: NSViewRepresentable {
     /// Plays the animated startup banner with timing
     private func playStartupAnimation(on tv: LocalProcessTerminalView) {
         let frames = StartupBanner.animationFrames
-        // Initial delay to let terminal fully initialize
-        var cumulativeDelay: Int = 150
+        // Let the PTY/shell attach before we clear the screen (avoids racing zsh output)
+        var cumulativeDelay: Int = 280
 
         for frame in frames {
             cumulativeDelay += frame.delay

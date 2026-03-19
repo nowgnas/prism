@@ -7,7 +7,6 @@ enum StartupBanner {
     private static let clear   = "\u{001B}[2J\u{001B}[H"  // Clear screen & home cursor
     private static let hide    = "\u{001B}[?25l"          // Hide cursor
     private static let show    = "\u{001B}[?25h"          // Show cursor
-    private static let up      = "\u{001B}[A"             // Cursor up
     private static let home    = "\u{001B}[H"             // Cursor home
 
     // Neon rainbow colors (24-bit true color)
@@ -20,9 +19,7 @@ enum StartupBanner {
         "\u{001B}[38;2;255;55;95m",    // 5 Rose     #FF375F
     ]
 
-    private static let white = "\u{001B}[38;2;226;226;240m"
     private static let dim   = "\u{001B}[38;2;68;68;90m"
-    private static let cyan  = "\u{001B}[38;2;0;255;255m"
 
     /// Prism shape lines
     private static let prismLines = [
@@ -40,41 +37,39 @@ enum StartupBanner {
     static var animationFrames: [(delay: Int, text: String)] {
         var frames: [(Int, String)] = []
 
-        // Frame 0: Hide cursor
-        frames.append((0, hide))
+        // Wipe any shell MOTD/prompt noise, hide cursor, draw from top-left
+        frames.append((0, clear + hide + home))
 
-        // Frame 1: Show divider
-        frames.append((50, "\n\(dim)\(divider)\(reset)\n\n"))
+        // Top divider
+        frames.append((40, "\(dim)\(divider)\(reset)\n\n"))
 
-        // Frames 2-7: Build prism line by line with color cycling
+        // Prism shape line by line
         for (i, line) in prismLines.enumerated() {
             let color = colors[i % colors.count]
-            frames.append((80, "\(color)\(bold)\(line)\(reset)\n"))
+            frames.append((70, "\(color)\(bold)\(line)\(reset)\n"))
         }
 
-        // Frame 8: Empty line
-        frames.append((100, "\n"))
+        frames.append((90, "\n"))
 
-        // Frame 9-20: Typing effect for "P R I S M"
+        // Typing effect: indent + one feed per glyph
         let title = "✦ P R I S M ✦"
-        var titleStr = "     "
-        for (i, char) in title.enumerated() {
-            let colorIdx = i % colors.count
-            titleStr += "\(colors[colorIdx])\(bold)\(char)\(reset)"
+        frames.append((45, "     "))
+        var colorTick = 0
+        for char in title {
+            if char == " " {
+                frames.append((28, " "))
+            } else {
+                let c = colors[colorTick % colors.count]
+                colorTick += 1
+                frames.append((45, "\(c)\(bold)\(char)\(reset)"))
+            }
         }
-        frames.append((50, titleStr + "\n"))
+        frames.append((60, "\n"))
 
-        // Frame 21: Subtitle
-        frames.append((100, "\(dim)    Terminal Multiplexer\(reset)\n"))
+        frames.append((90, "\(dim)    Terminal Multiplexer\(reset)\n"))
+        frames.append((70, "\n\(dim)\(divider)\(reset)\n\n"))
 
-        // Frame 22: Bottom divider
-        frames.append((80, "\n\(dim)\(divider)\(reset)\n"))
-
-        // Subtle glow pulse effect (no cursor movement - avoids timing issues)
-        frames.append((200, ""))
-
-        // Final frame: Show cursor and add newlines
-        frames.append((50, "\n\(show)"))
+        frames.append((120, show))
 
         return frames
     }
